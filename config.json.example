@@ -1,0 +1,7 @@
+{
+  "mappings" : {
+    "cool/stuff" : "index.docker.io/flavio",
+    "cool/distro" : "index.docker.io/opensuse",
+    "etcd": "quay.io/coreos/etcd"
+  }
+}
