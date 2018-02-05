@@ -20,6 +20,13 @@ Collage is a Go program, it can be installed by doing:
 go get github.com/flavio/collage
 ```
 
+You can also use the [flavio/collage](https://hub.docker.com/r/flavio/collage/)
+image available on the Docker Hub.
+
+```
+$ docker run --rm -p 5000:5000 -v /path/to/local/config.json:/app/config.json:ro flavio/collage
+```
+
 # Usage
 
 Collage expects a json configuration file that specifies all the mappings.
