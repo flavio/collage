@@ -8,8 +8,8 @@
 Collage acts as a read-only [docker registry](https://github.com/docker/distribution)
 that is made of images coming from different locations.
 
-User can define remote repositories hosted on different registries and "mount"
-them under specific path.
+Users can define remote repositories hosted on different registries and "mount"
+them under specific paths.
 
 
 # Installation
