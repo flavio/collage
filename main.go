@@ -44,7 +44,7 @@ func main() {
 		},
 		cli.IntFlag{
 			Name:        "port, p",
-			Value:       4000,
+			Value:       5000,
 			Usage:       "Listen to port",
 			EnvVar:      "COLLAGE_PORT",
 			Destination: &port,
