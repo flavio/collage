@@ -104,3 +104,9 @@ done by collage, but the final image will have the name we expect.
 
 This is an experimental project, done for fun over a weekend. It surprisingly
 works, but there are probably areas to make more robust and bugs ;)
+
+Some known issues:
+
+  * GET catalog: some registries don't allow this request to be performed
+    (eg: docker hub, quay.io); there's nothing collage can do in that case.
+    However everything works as expected if you know what you are looking for.
