@@ -27,6 +27,8 @@ image available on the Docker Hub.
 $ docker run --rm -p 5000:5000 -v /path/to/local/config.json:/app/config.json:ro flavio/collage
 ```
 
+openSUSE and SUSE packages are available inside of `obs://Virtualization:containers`.
+
 # Usage
 
 Collage expects a json configuration file that specifies all the mappings.
