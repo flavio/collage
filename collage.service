@@ -1,0 +1,11 @@
+[Unit]
+Description=collage
+Documentation=https://github.com/flavio/collage
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/collage --config /etc/collage/config.json
+
+[Install]
+WantedBy=multi-user.target
+
