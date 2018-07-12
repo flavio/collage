@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+# Update system certificates, useful when mapped registries are using
+# self-signed certs
+update-ca-certificates
+
+# step down from being root
+exec su-exec web:web ./collage "$@"

@@ -27,6 +27,11 @@ image available on the Docker Hub.
 $ docker run --rm -p 5000:5000 -v /path/to/local/config.json:/app/config.json:ro flavio/collage
 ```
 
+**Note well:** this image is based on Alpine Linux. If you some of your registries
+are using self-signed certificates you just have to mount them into the running
+image under `/usr/local/share/ca-certificates/<cert.pem>`. The entrypoint of
+the image will automatically load them.
+
 openSUSE and SUSE packages are available inside of `obs://Virtualization:containers`.
 
 # Usage
