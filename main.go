@@ -3,8 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/flavio/collage/config"
 	"github.com/flavio/collage/handlers"
@@ -19,9 +22,15 @@ import (
 
 const VERSION = "0.1.0"
 
+func cleanup(socket string) {
+	if socket != "" {
+		os.Remove(socket)
+	}
+}
+
 func main() {
 	var port int
-	var configData, configFile, cert, key string
+	var configData, configFile, cert, key, socket string
 	var debug bool
 
 	app := cli.NewApp()
@@ -50,6 +59,12 @@ func main() {
 			Destination: &port,
 		},
 		cli.StringFlag{
+			Name:        "socket",
+			Usage:       "Bind to a unix socket",
+			EnvVar:      "COLLAGE_SOCKET",
+			Destination: &socket,
+		},
+		cli.StringFlag{
 			Name:        "config-file",
 			Value:       "",
 			Usage:       "Configuration file",
@@ -72,6 +87,16 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) error {
+
+		// ensure cleanup is done when the program is terminated
+		sigChannel := make(chan os.Signal)
+		signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-sigChannel
+			cleanup(socket)
+			os.Exit(0)
+		}()
+
 		if debug {
 			log.SetLevel(log.DebugLevel)
 		}
@@ -114,16 +139,38 @@ func main() {
 		r := defineRoutes(hApp)
 		loggedRouter := gorilla_handlers.LoggingHandler(os.Stdout, r)
 
-		if cert == "" {
-			fmt.Printf("Starting insecure server on :%d\n", port)
-			err = http.ListenAndServe(fmt.Sprintf(":%d", port), loggedRouter)
+		if socket != "" {
+			_, err := os.Stat(socket)
+			if err == nil {
+				return cli.NewExitError(
+					fmt.Errorf(
+						"Cannot create socket %q, file already in place. Is another instance already running?",
+						socket),
+					1)
+			} else if !os.IsNotExist(err) {
+				return cli.NewExitError(err, 1)
+			}
+			unixListener, err := net.Listen("unix", socket)
+			if err != nil {
+				return cli.NewExitError(err, 1)
+			}
+			defer func() {
+				unixListener.Close()
+				os.Remove(socket)
+			}()
+			err = http.Serve(unixListener, loggedRouter)
 		} else {
-			fmt.Printf("Starting secure server on :%d\n", port)
-			err = http.ListenAndServeTLS(
-				fmt.Sprintf(":%d", port),
-				cert,
-				key,
-				loggedRouter)
+			if cert == "" {
+				fmt.Printf("Starting insecure server on :%d\n", port)
+				err = http.ListenAndServe(fmt.Sprintf(":%d", port), loggedRouter)
+			} else {
+				fmt.Printf("Starting secure server on :%d\n", port)
+				err = http.ListenAndServeTLS(
+					fmt.Sprintf(":%d", port),
+					cert,
+					key,
+					loggedRouter)
+			}
 		}
 
 		if err != nil {
