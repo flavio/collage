@@ -21,7 +21,7 @@ const VERSION = "0.1.0"
 
 func main() {
 	var port int
-	var configFile, cert, key string
+	var configData, configFile, cert, key string
 	var debug bool
 
 	app := cli.NewApp()
@@ -50,11 +50,18 @@ func main() {
 			Destination: &port,
 		},
 		cli.StringFlag{
-			Name:        "config, c",
-			Value:       "config.json",
+			Name:        "config-file",
+			Value:       "",
 			Usage:       "Configuration file",
-			EnvVar:      "COLLAGE_CONFIG",
+			EnvVar:      "COLLAGE_CONFIG_FILE",
 			Destination: &configFile,
+		},
+		cli.StringFlag{
+			Name:        "config, c",
+			Value:       "",
+			Usage:       "JSON configuration",
+			EnvVar:      "COLLAGE_CONFIG",
+			Destination: &configData,
 		},
 		cli.BoolFlag{
 			Name:        "debug, d",
@@ -75,7 +82,26 @@ func main() {
 				1)
 		}
 
-		cfg, err := config.LoadConfig(configFile)
+		if configFile != "" && configData != "" {
+			return cli.NewExitError(
+				errors.New("'--config-file' and '--config' cannot be specified at the same time"),
+				1)
+		}
+
+		if configFile == "" && configData == "" {
+			return cli.NewExitError(
+				errors.New("You must specify either '--config-file' or '--config'"),
+				1)
+		}
+
+		var cfg config.Config
+		var err error
+
+		if configFile != "" {
+			cfg, err = config.LoadConfigFromFile(configFile)
+		} else {
+			cfg, err = config.LoadConfig(configData)
+		}
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}
