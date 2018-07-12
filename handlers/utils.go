@@ -8,14 +8,14 @@ import (
 	"github.com/flavio/collage/config"
 )
 
-func translateName(cfg config.Config, name string) (registry string, remoteName string, err error) {
+func translateName(mappingRules config.MappingRules, name string) (registry string, remoteName string, err error) {
 	var source, target string
 
-	if _, rootMappingDefined := cfg.Mappings["/"]; rootMappingDefined {
+	if _, rootMappingDefined := mappingRules.Mappings["/"]; rootMappingDefined {
 		// '/' has the precedence over everything, the config is also
 		// purged of all the other mappings -> we have just one registry with
 		// one mount point
-		for reg, mountPoints := range cfg.MappingsByRegistry {
+		for reg, mountPoints := range mappingRules.MountPointsByRegistry {
 			registry = reg
 			for _, mp := range mountPoints {
 				remoteName = fmt.Sprintf("%s/%s", mp.Source, name)
@@ -24,7 +24,7 @@ func translateName(cfg config.Config, name string) (registry string, remoteName 
 		}
 	}
 
-	for reg, mountPoints := range cfg.MappingsByRegistry {
+	for reg, mountPoints := range mappingRules.MountPointsByRegistry {
 		for _, mp := range mountPoints {
 			if strings.HasPrefix(name, mp.Target) {
 				target = mp.Target
@@ -45,4 +45,11 @@ func translateName(cfg config.Config, name string) (registry string, remoteName 
 	remoteName = strings.Replace(name, target, source, 1)
 
 	return
+}
+
+func GetRulesByHost(host string, rules config.Rules) config.MappingRules {
+	if _, found := rules.Vhosts[host]; found {
+		return rules.Vhosts[host]
+	}
+	return rules.Instance
 }

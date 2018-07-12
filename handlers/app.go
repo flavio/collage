@@ -6,15 +6,14 @@ import (
 )
 
 type App struct {
-	Config config.Config
+	Rules config.Rules
 }
 
-func NewApp(cfg config.Config) (App, error) {
-	app := App{Config: cfg}
+func NewApp(rules config.Rules) (App, error) {
+	app := App{Rules: rules}
 
 	log.WithFields(log.Fields{
-		"Mappings":           app.Config.Mappings,
-		"MappingsByRegistry": app.Config.MappingsByRegistry,
+		"Rules": app.Rules,
 	}).Info("app initiated")
 
 	return app, nil

@@ -18,9 +18,11 @@ func (app *App) GetLayer(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(log.Fields{
 		"name":   name,
 		"digest": digest,
+		"host":   r.Host,
 	}).Debug("GET layer")
 
-	registry, remoteName, err := translateName(app.Config, name)
+	rules := GetRulesByHost(r.Host, app.Rules)
+	registry, remoteName, err := translateName(rules, name)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"event": "translate name",

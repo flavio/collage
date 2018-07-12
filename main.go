@@ -90,7 +90,7 @@ func main() {
 
 		// ensure cleanup is done when the program is terminated
 		sigChannel := make(chan os.Signal)
-		signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
+		signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 		go func() {
 			<-sigChannel
 			cleanup(socket)
@@ -119,19 +119,19 @@ func main() {
 				1)
 		}
 
-		var cfg config.Config
+		var rules config.Rules
 		var err error
 
 		if configFile != "" {
-			cfg, err = config.LoadConfigFromFile(configFile)
+			rules, err = config.LoadConfigFromFile(configFile)
 		} else {
-			cfg, err = config.LoadConfig(configData)
+			rules, err = config.LoadConfig(configData)
 		}
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}
 
-		hApp, err := handlers.NewApp(cfg)
+		hApp, err := handlers.NewApp(rules)
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}

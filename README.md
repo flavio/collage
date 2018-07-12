@@ -67,6 +67,52 @@ available as `collage.local.lan/cool/stuff/<repository>:<tag(s)>`. For
 example: [collage.local.lan/cool/stuff/guestbook](https://hub.docker.com/r/flavio/guestbook/)
 [collage.local.lan/cool/stuff/guestbook](https://hub.docker.com/r/flavio/guestbook-go/),...
 
+## Virtual hosts config
+
+It's possible to configure collage to have virtual hosts specific mappings.
+
+This can be achieved by using the following configuration:
+
+```json
+{
+  "vhosts" : {
+    "docker-io-mirror.local.lan": {
+      "mappings" : {
+        "/" : "mirror.local.lan/docker.io"
+      }
+    },
+    "quay-io-mirror.local.lan": {
+      "mappings" : {
+        "/" : "mirror.local.lan/quay.io"
+      }
+    }
+  },
+  "mappings" : {
+    "cool/stuff" : "index.docker.io/flavio",
+    "cool/distro" : "index.docker.io/opensuse",
+    "etcd": "quay.io/coreos/etcd"
+  }
+}
+```
+
+Let's assume the host running collage can be reached using the following FQDNs:
+
+  * `docker-io-mirror.local.lan`
+  * `quay-io-mirror.local.lan`
+  * `collage.local.lan`
+
+That will lead to the following behaviours:
+
+  * `docker pull docker-io-mirror.local.lan/busybox:latest` will
+    be resolved to `mirror.local.lan/docker.io/busybox:latest`
+  * `docker pull quay-io-mirror.local.lan/cores/etcd:latest` will
+    be resolved to `mirror.local.lan/quay.io/coreos/etcd:latest`
+  * `docker pull collage.local.lan/cool/stuff/collage:latest` will
+    be resolved to `index.docker.io/flavio/collage:latest`
+
+This is particularly useful when to host multiple "/" mappings with the same
+collage instance.
+
 # A nice use case
 
 My team is building different docker images in an automated fashion. The images

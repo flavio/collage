@@ -15,15 +15,23 @@ type catalogResponse struct {
 }
 
 func (app *App) GetCatalog(w http.ResponseWriter, r *http.Request) {
+	log.WithFields(log.Fields{
+		"event": "fetch catalog",
+		"host":  r.Host,
+	}).Debug("GetCatalog")
+
 	//TODO: handle pagination?
 	response := catalogResponse{}
 
-	for registry, mounts := range app.Config.MappingsByRegistry {
+	rules := GetRulesByHost(r.Host, app.Rules)
+
+	for registry, mounts := range rules.MountPointsByRegistry {
 		upstreamCatalog, err := upstreamCatalog(registry)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"event":    "fetch catalog",
 				"registry": registry,
+				"host":     r.Host,
 			}).Error(err)
 		}
 

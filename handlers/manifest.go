@@ -18,9 +18,11 @@ func (app *App) GetManifest(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(log.Fields{
 		"name":      name,
 		"reference": reference,
+		"host":      r.Host,
 	}).Debug("GET manifest")
 
-	registry, remoteName, err := translateName(app.Config, name)
+	rules := GetRulesByHost(r.Host, app.Rules)
+	registry, remoteName, err := translateName(rules, name)
 	if err != nil {
 		errcode.ServeJSON(w, v2.ErrorCodeManifestUnknown)
 		log.WithFields(log.Fields{
