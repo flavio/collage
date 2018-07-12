@@ -18,7 +18,7 @@ func (app *App) GetCatalog(w http.ResponseWriter, r *http.Request) {
 	//TODO: handle pagination?
 	response := catalogResponse{}
 
-	for registry, mounts := range app.MountsByReg {
+	for registry, mounts := range app.Config.MappingsByRegistry {
 		upstreamCatalog, err := upstreamCatalog(registry)
 		if err != nil {
 			log.WithFields(log.Fields{

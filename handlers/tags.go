@@ -27,7 +27,7 @@ func (app *App) GetRepositoryTags(w http.ResponseWriter, r *http.Request) {
 		"name": name,
 	}).Debug("Looking for tags")
 
-	registry, remoteName, err := translateName(app.MountsByReg, name)
+	registry, remoteName, err := translateName(app.Config, name)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"event": "translate name",

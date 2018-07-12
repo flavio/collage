@@ -20,7 +20,7 @@ func (app *App) GetManifest(w http.ResponseWriter, r *http.Request) {
 		"reference": reference,
 	}).Debug("GET manifest")
 
-	registry, remoteName, err := translateName(app.MountsByReg, name)
+	registry, remoteName, err := translateName(app.Config, name)
 	if err != nil {
 		errcode.ServeJSON(w, v2.ErrorCodeManifestUnknown)
 		log.WithFields(log.Fields{

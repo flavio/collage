@@ -20,7 +20,7 @@ func (app *App) GetLayer(w http.ResponseWriter, r *http.Request) {
 		"digest": digest,
 	}).Debug("GET layer")
 
-	registry, remoteName, err := translateName(app.MountsByReg, name)
+	registry, remoteName, err := translateName(app.Config, name)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"event": "translate name",
