@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	docker_types "github.com/docker/docker/api/types"
-	"github.com/jessfraz/reg/registry"
+	"github.com/genuinetools/reg/registry"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -55,7 +55,7 @@ func upstreamCatalog(registryUrl *url.URL) (repositories []string, err error) {
 		ServerAddress: registryUrl.String(),
 	}
 
-	reg, err := registry.New(auth, false)
+	reg, err := registry.New(auth, registry.Opt{})
 	if err != nil {
 		return
 	}

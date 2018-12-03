@@ -12,7 +12,8 @@
     "manifest/schema1",
     "manifest/schema2",
     "reference",
-    "registry/api/errcode"
+    "registry/api/errcode",
+    "registry/api/v2"
   ]
   revision = "fea8bd51143307d3454703eadecbeeb778aa75e8"
 
@@ -53,6 +54,12 @@
   revision = "aabc10ec26b754e797f9028f4589c5b7bd90dc20"
 
 [[projects]]
+  name = "github.com/genuinetools/reg"
+  packages = ["registry"]
+  revision = "4a4d0e5d108ca9558879bdf1aba94d09e921cf1e"
+  version = "v0.16.0"
+
+[[projects]]
   name = "github.com/gogo/protobuf"
   packages = ["proto"]
   revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
@@ -75,12 +82,6 @@
   packages = ["."]
   revision = "53c1911da2b537f792e7cafcb446b05ffe33b996"
   version = "v1.6.1"
-
-[[projects]]
-  name = "github.com/jessfraz/reg"
-  packages = ["registry"]
-  revision = "cde5e3cc1f891b53dd4af7e48f38a54f36e32b53"
-  version = "v0.9.0"
 
 [[projects]]
   name = "github.com/opencontainers/go-digest"
@@ -133,6 +134,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fca4da0f238ff4c54a03b9b4ce279efc924c19a10a19dd2a8c2273114e3e81b0"
+  inputs-digest = "9e13718bffa999977b175ca0d54c8c64890b02c845adefb0ed6cb204eda08b1b"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -8,8 +8,8 @@ import (
 	"github.com/docker/distribution/registry/api/errcode"
 	"github.com/docker/distribution/registry/api/v2"
 	docker_types "github.com/docker/docker/api/types"
+	"github.com/genuinetools/reg/registry"
 	"github.com/gorilla/mux"
-	"github.com/jessfraz/reg/registry"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -70,7 +70,7 @@ func upstreamTags(registryUrl *url.URL, name string) (tags []string, err error) 
 		ServerAddress: registryUrl.String(),
 	}
 
-	reg, err := registry.New(auth, false)
+	reg, err := registry.New(auth, registry.Opt{})
 	if err != nil {
 		return
 	}
