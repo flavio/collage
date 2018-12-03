@@ -186,6 +186,11 @@ func main() {
 func defineRoutes(app handlers.App) *mux.Router {
 	r := mux.NewRouter()
 
+	// GET API version check
+	r.HandleFunc(
+		"/v2/",
+		app.GetApiVersionCheck).Methods("GET")
+
 	//GET CATALOG
 	r.HandleFunc(
 		"/v2/_catalog",

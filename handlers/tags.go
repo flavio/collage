@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/docker/distribution/registry/api/errcode"
 	"github.com/docker/distribution/registry/api/v2"
@@ -64,9 +65,9 @@ func (app *App) GetRepositoryTags(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func upstreamTags(registryUrl, name string) (tags []string, err error) {
+func upstreamTags(registryUrl *url.URL, name string) (tags []string, err error) {
 	auth := docker_types.AuthConfig{
-		ServerAddress: registryUrl,
+		ServerAddress: registryUrl.String(),
 	}
 
 	reg, err := registry.New(auth, false)

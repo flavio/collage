@@ -32,7 +32,7 @@ func (app *App) GetManifest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUrl := fmt.Sprintf("https://%s/v2/%s/manifests/%s", registry, remoteName, reference)
+	newUrl := fmt.Sprintf("%s/v2/%s/manifests/%s", registry.String(), remoteName, reference)
 	log.WithFields(log.Fields{
 		"event":       "redirect manifest",
 		"name":        name,

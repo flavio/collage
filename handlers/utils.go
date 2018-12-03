@@ -3,12 +3,13 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/flavio/collage/config"
 )
 
-func translateName(mappingRules config.MappingRules, name string) (registry string, remoteName string, err error) {
+func translateName(mappingRules config.MappingRules, name string) (registry *url.URL, remoteName string, err error) {
 	var source, target string
 
 	if _, rootMappingDefined := mappingRules.Mappings["/"]; rootMappingDefined {
@@ -37,7 +38,7 @@ func translateName(mappingRules config.MappingRules, name string) (registry stri
 			break
 		}
 	}
-	if registry == "" || target == "" || source == "" {
+	if registry == nil || target == "" || source == "" {
 		err = errors.New("Cannot find mount point")
 		return
 	}

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"net/url"
 	"testing"
 )
 
@@ -16,6 +18,8 @@ func TestParseSimpleConfig(t *testing.T) {
 	`
 
 	rules := handleConfig(t, configData)
+	fmt.Printf("%+v\n", rules.Instance.Mappings)
+	fmt.Printf("%+v\n", rules.Instance.MountPointsByRegistry)
 
 	for _, path := range []string{"cool/stuff", "cool/distro", "etcd"} {
 		_, found := rules.Instance.Mappings[path]
@@ -47,7 +51,7 @@ func TestParseConfigWithRootMapping(t *testing.T) {
 
 	rules := handleConfig(t, configData)
 
-	mappingsToCheck := []map[string]string{
+	mappingsToCheck := []map[string]*url.URL{
 		rules.Instance.Mappings,
 		rules.Vhosts["docker-io-mirror.local.lan"].Mappings,
 	}
@@ -59,7 +63,7 @@ func TestParseConfigWithRootMapping(t *testing.T) {
 		}
 
 		if len(mappings) != 1 {
-			t.Fatalf("Wrong number of mappings found, expected 1 got %s", len(mappings))
+			t.Fatalf("Wrong number of mappings found, expected 1 got %d", len(mappings))
 		}
 	}
 }

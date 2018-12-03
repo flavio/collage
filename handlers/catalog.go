@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	docker_types "github.com/docker/docker/api/types"
@@ -49,9 +50,9 @@ func (app *App) GetCatalog(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func upstreamCatalog(registryUrl string) (repositories []string, err error) {
+func upstreamCatalog(registryUrl *url.URL) (repositories []string, err error) {
 	auth := docker_types.AuthConfig{
-		ServerAddress: registryUrl,
+		ServerAddress: registryUrl.String(),
 	}
 
 	reg, err := registry.New(auth, false)

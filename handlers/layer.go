@@ -33,7 +33,7 @@ func (app *App) GetLayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUrl := fmt.Sprintf("https://%s/v2/%s/blobs/%s", registry, remoteName, digest)
+	newUrl := fmt.Sprintf("%s/v2/%s/blobs/%s", registry.String(), remoteName, digest)
 	log.WithFields(log.Fields{
 		"event":       "redirect blob",
 		"name":        name,

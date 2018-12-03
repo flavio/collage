@@ -10,11 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type MountPoint struct {
-	Source string
-	Target string
-}
-
 type VHostSettings struct {
 	InstanceMappings map[string]string `json:"mappings"`
 }
@@ -24,14 +19,24 @@ type Config struct {
 	VirtualHostsMappings map[string]VHostSettings `json:"vhosts"`
 }
 
+// Defines a mount point rule.
+// Given `cool/stuff` -> `index.docker.io/flavio`:
+//   * Source is going to be index.docker.io/flavio
+//   * Target is going to be `cool/stuff`
+type MountPoint struct {
+	Source string
+	Target string
+}
+
 type MappingRules struct {
-	Mappings              map[string]string
-	MountPointsByRegistry map[string][]MountPoint
+	Mappings              map[string]*url.URL
+	MountPointsByRegistry map[*url.URL][]MountPoint
 }
 
 type Rules struct {
-	Instance MappingRules
-	Vhosts   map[string]MappingRules
+	Instance            MappingRules
+	Vhosts              map[string]MappingRules
+	RegistryBearerRealm map[*url.URL]string
 }
 
 func validateMappings(mappings map[string]string) {
@@ -60,27 +65,17 @@ func (c *Config) Validate() {
 	}
 }
 
-func getMountPointsByRegistry(mappings map[string]string) (mappingsByRegistry map[string][]MountPoint, err error) {
-	mappingsByRegistry = make(map[string][]MountPoint)
+func getMountPointsByRegistry(mappings map[string]*url.URL) (mappingsByRegistry map[*url.URL][]MountPoint, err error) {
+	mappingsByRegistry = make(map[*url.URL][]MountPoint)
 
 	for mount, source := range mappings {
 		mp := MountPoint{Target: mount}
 
-		if !strings.HasPrefix(source, "https://") && !strings.HasPrefix(source, "http://") {
-			source = fmt.Sprintf("https://%s", source)
-		}
-
-		u, err2 := url.Parse(source)
-		if err2 != nil {
-			err = fmt.Errorf("Cannot parse url %s: %v", source, err2)
-			return
-		}
-
-		registry := u.Host
-		if strings.HasPrefix(u.Path, "/") {
-			mp.Source = u.Path[1:]
+		registry, _ := url.Parse(fmt.Sprintf("%s://%s", source.Scheme, source.Host))
+		if strings.HasPrefix(source.Path, "/") {
+			mp.Source = source.Path[1:]
 		} else {
-			mp.Source = u.Path
+			mp.Source = source.Path
 		}
 
 		if _, hasKey := mappingsByRegistry[registry]; !hasKey {
@@ -92,12 +87,35 @@ func getMountPointsByRegistry(mappings map[string]string) (mappingsByRegistry ma
 	return
 }
 
+func parseMappings(mappings map[string]string) (ret map[string]*url.URL, err error) {
+	ret = make(map[string]*url.URL)
+
+	for target, source := range mappings {
+		if !strings.HasPrefix(source, "https://") && !strings.HasPrefix(source, "http://") {
+			source = fmt.Sprintf("https://%s", source)
+		}
+
+		url, err2 := url.Parse(source)
+		if err2 != nil {
+			err = fmt.Errorf("Cannot parse url %s: %v", source, err2)
+			return
+		}
+
+		ret[target] = url
+	}
+
+	return
+}
+
 func (cfg *Config) Rules() (rules Rules, err error) {
 	cfg.Validate()
 
-	rules.Instance.Mappings = cfg.InstanceMappings
+	rules.Instance.Mappings, err = parseMappings(cfg.InstanceMappings)
+	if err != nil {
+		return Rules{}, err
+	}
 
-	rules.Instance.MountPointsByRegistry, err = getMountPointsByRegistry(cfg.InstanceMappings)
+	rules.Instance.MountPointsByRegistry, err = getMountPointsByRegistry(rules.Instance.Mappings)
 	if err != nil {
 		return Rules{}, err
 	}
@@ -105,7 +123,10 @@ func (cfg *Config) Rules() (rules Rules, err error) {
 
 	for vhost := range cfg.VirtualHostsMappings {
 		var mappingRules MappingRules
-		mappingRules.Mappings = cfg.VirtualHostsMappings[vhost].InstanceMappings
+		mappingRules.Mappings, err = parseMappings(cfg.VirtualHostsMappings[vhost].InstanceMappings)
+		if err != nil {
+			return Rules{}, err
+		}
 
 		mappingRules.MountPointsByRegistry, err = getMountPointsByRegistry(mappingRules.Mappings)
 		if err != nil {
@@ -114,6 +135,8 @@ func (cfg *Config) Rules() (rules Rules, err error) {
 
 		rules.Vhosts[vhost] = mappingRules
 	}
+
+	rules.RegistryBearerRealm = make(map[*url.URL]string)
 
 	return
 }

@@ -18,9 +18,9 @@ func TestTranslateName(t *testing.T) {
 	`
 
 	testData := map[string][]string{
-		"cool/stuff/busybox": []string{"index.docker.io", "flavio/busybox"},
-		"cool/distro/leap":   []string{"index.docker.io", "opensuse/leap"},
-		"etcd":               []string{"quay.io", "coreos/etcd"},
+		"cool/stuff/busybox": []string{"https://index.docker.io", "flavio/busybox"},
+		"cool/distro/leap":   []string{"https://index.docker.io", "opensuse/leap"},
+		"etcd":               []string{"https://quay.io", "coreos/etcd"},
 	}
 
 	cfg := handleConfig(t, configData)
@@ -40,17 +40,17 @@ func TestTranslateNameWithRootDefined(t *testing.T) {
 	`
 
 	testData := map[string][]string{
-		"cool/stuff/busybox": []string{"registry.local.lan", "docker.io/cool/stuff/busybox"},
-		"cool/distro/leap":   []string{"registry.local.lan", "docker.io/cool/distro/leap"},
-		"etcd":               []string{"registry.local.lan", "docker.io/etcd"},
-		"busybox":            []string{"registry.local.lan", "docker.io/busybox"},
+		"cool/stuff/busybox": []string{"https://registry.local.lan", "docker.io/cool/stuff/busybox"},
+		"cool/distro/leap":   []string{"https://registry.local.lan", "docker.io/cool/distro/leap"},
+		"etcd":               []string{"https://registry.local.lan", "docker.io/etcd"},
+		"busybox":            []string{"https://registry.local.lan", "docker.io/busybox"},
 	}
 
 	mountsByReg := handleConfig(t, configData)
 	runTranslateNameTestCase(t, mountsByReg, testData)
 }
 
-func handleConfig(t *testing.T, configData string) config.Config {
+func handleConfig(t *testing.T, configData string) config.Rules {
 	cfg, err := config.LoadConfig(configData)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -58,13 +58,13 @@ func handleConfig(t *testing.T, configData string) config.Config {
 	return cfg
 }
 
-func runTranslateNameTestCase(t *testing.T, cfg config.Config, testData map[string][]string) {
+func runTranslateNameTestCase(t *testing.T, rules config.Rules, testData map[string][]string) {
 	for req := range testData {
-		registry, remoteName, err := translateName(cfg, req)
+		registry, remoteName, err := translateName(rules.Instance, req)
 		if err != nil {
 			t.Fatalf("Unexpected error while translating name of %s: %v", req, err)
 		}
-		if registry != testData[req][0] {
+		if registry.String() != testData[req][0] {
 			t.Fatalf(
 				"Wrong registry mapping for %s: got '%s' instead of '%s'",
 				req,
