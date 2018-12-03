@@ -45,7 +45,7 @@ For example, given the following configuration file:
   "mappings" : {
     "cool/stuff":  "index.docker.io/flavio",
     "cool/distro": "index.docker.io/opensuse",
-    "etcd":        "quay.io/coreos/etcd"
+    "etcd":        "quay.io/coreos/etcd",
     "foobar":      "http://insecure-registry.local.lan/foo"
   }
 }
