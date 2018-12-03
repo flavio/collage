@@ -43,9 +43,10 @@ For example, given the following configuration file:
 ```json
 {
   "mappings" : {
-    "cool/stuff" : "index.docker.io/flavio",
-    "cool/distro" : "index.docker.io/opensuse",
-    "etcd": "quay.io/coreos/etcd"
+    "cool/stuff":  "index.docker.io/flavio",
+    "cool/distro": "index.docker.io/opensuse",
+    "etcd":        "quay.io/coreos/etcd"
+    "foobar":      "http://insecure-registry.local.lan/foo"
   }
 }
 ```
@@ -66,6 +67,10 @@ All the images inside of [/flavio](https://hub.docker.com/u/flavio/) are
 available as `collage.local.lan/cool/stuff/<repository>:<tag(s)>`. For
 example: [collage.local.lan/cool/stuff/guestbook](https://hub.docker.com/r/flavio/guestbook/)
 [collage.local.lan/cool/stuff/guestbook](https://hub.docker.com/r/flavio/guestbook-go/),...
+
+**Note well:** by default collage assumes the mapped registries are using TLS.
+You must be explicit about registries **not** using TLS: provide the `http://`
+prefix inside of their URL.
 
 ## Virtual hosts config
 
@@ -91,6 +96,7 @@ This can be achieved by using the following configuration:
     "cool/stuff" : "index.docker.io/flavio",
     "cool/distro" : "index.docker.io/opensuse",
     "etcd": "quay.io/coreos/etcd"
+    "foobar": "http://insecure-registry.local.lan/foo"
   }
 }
 ```
@@ -112,6 +118,11 @@ That will lead to the following behaviours:
 
 This is particularly useful when to host multiple "/" mappings with the same
 collage instance.
+
+**Note well:** also in this case collage assumes the mapped registries are using TLS.
+You must be explicit about registries **not** using TLS: provide the `http://`
+prefix inside of their URL.
+
 
 # A nice use case
 
