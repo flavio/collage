@@ -1,4 +1,4 @@
-FROM golang:1.8-alpine
+FROM golang:1.11-alpine
 
 COPY . /go/src/github.com/flavio/collage
 WORKDIR /go/src/github.com/flavio/collage
@@ -9,8 +9,11 @@ FROM alpine
 WORKDIR /app
 RUN adduser -h /app -D web
 RUN apk --update upgrade && \
-    apk add ca-certificates su-exec && \
+    apk add ca-certificates sudo && \
     rm -rf /var/cache/apk/*
+# Allow web user to update system certificates
+RUN echo "web ALL=(ALL) NOPASSWD: /usr/sbin/update-ca-certificates" >> /etc/sudoers
+
 COPY --from=0 /go/src/github.com/flavio/collage/collage /app/
 ADD docker/init /init
 
@@ -19,3 +22,4 @@ ADD docker/init /init
 RUN chown -R web:web *
 ENTRYPOINT ["/init"]
 EXPOSE 5000
+USER web
