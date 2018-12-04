@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -26,7 +27,7 @@ func (app *App) GetApiVersionCheck(w http.ResponseWriter, r *http.Request) {
 				realRegistry = reg
 			}
 
-			bearerRealm, err := getRegistryBearerRealm(realRegistry, app.Rules)
+			bearerRealm, err := getRegistryBearerRealm(realRegistry, app.Rules, app.Cfg)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"event":        "getRegistryBearerRealm",
@@ -62,14 +63,29 @@ func (app *App) GetApiVersionCheck(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "{}")
 }
 
-func getRegistryBearerRealm(registry *url.URL, rules config.Rules) (string, error) {
-	bearer, known := rules.RegistryBearerRealm[registry]
+func getRegistryBearerRealm(url *url.URL, rules config.Rules, cfg *config.Config) (string, error) {
+	bearer, known := rules.RegistryBearerRealm[url]
 	if known {
 		return bearer, nil
 	}
 
-	apiEndpoint := fmt.Sprintf("%s/v2/", registry.String())
-	resp, err := http.Get(apiEndpoint)
+	tr := &http.Transport{}
+	if url.Scheme == "https" && cfg.CertPool != nil {
+		config := &tls.Config{
+			InsecureSkipVerify: false,
+			RootCAs:            cfg.CertPool,
+		}
+		tr = &http.Transport{TLSClientConfig: config}
+	}
+	client := &http.Client{Transport: tr}
+
+	apiEndpoint := fmt.Sprintf("%s/v2/", url.String())
+	req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -79,8 +95,8 @@ func getRegistryBearerRealm(registry *url.URL, rules config.Rules) (string, erro
 		if len(auth) == 1 {
 			for _, info := range strings.Split(auth[0], ",") {
 				if strings.HasPrefix(info, "Bearer realm=") {
-					rules.RegistryBearerRealm[registry] = strings.TrimSuffix(strings.TrimPrefix(info, "Bearer realm=\""), "\"")
-					return rules.RegistryBearerRealm[registry], nil
+					rules.RegistryBearerRealm[url] = strings.TrimSuffix(strings.TrimPrefix(info, "Bearer realm=\""), "\"")
+					return rules.RegistryBearerRealm[url], nil
 				}
 			}
 		}
@@ -90,6 +106,6 @@ func getRegistryBearerRealm(registry *url.URL, rules config.Rules) (string, erro
 			resp.Header)
 	}
 
-	rules.RegistryBearerRealm[registry] = ""
-	return rules.RegistryBearerRealm[registry], nil
+	rules.RegistryBearerRealm[url] = ""
+	return rules.RegistryBearerRealm[url], nil
 }

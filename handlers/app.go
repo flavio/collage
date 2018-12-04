@@ -6,14 +6,24 @@ import (
 )
 
 type App struct {
+	Cfg   *config.Config
 	Rules config.Rules
 }
 
-func NewApp(rules config.Rules) (App, error) {
-	app := App{Rules: rules}
+func NewApp(cfg *config.Config) (App, error) {
+	rules, err := cfg.Rules()
+	if err != nil {
+		return App{}, err
+	}
+
+	app := App{
+		Rules: rules,
+		Cfg:   cfg,
+	}
 
 	log.WithFields(log.Fields{
-		"Rules": app.Rules,
+		"Rules":  app.Rules,
+		"Config": app.Cfg,
 	}).Info("app initiated")
 
 	return app, nil

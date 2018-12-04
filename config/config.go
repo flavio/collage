@@ -1,10 +1,14 @@
 package config
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -17,6 +21,10 @@ type VHostSettings struct {
 type Config struct {
 	InstanceMappings     map[string]string        `json:"mappings"`
 	VirtualHostsMappings map[string]VHostSettings `json:"vhosts"`
+
+	// This are attributes that are not part of the JSON configuration
+	Debug    bool
+	CertPool *x509.CertPool
 }
 
 // Defines a mount point rule.
@@ -141,21 +149,17 @@ func (cfg *Config) Rules() (rules Rules, err error) {
 	return
 }
 
-func LoadConfig(data string) (rules Rules, err error) {
-	var cfg Config
-
+func NewFromData(data string) (cfg Config, err error) {
 	decoder := json.NewDecoder(strings.NewReader(data))
 	err = decoder.Decode(&cfg)
 	if err != nil {
 		return
 	}
 
-	return cfg.Rules()
+	return
 }
 
-func LoadConfigFromFile(path string) (rules Rules, err error) {
-	var cfg Config
-
+func NewFromFile(path string) (cfg Config, err error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return
@@ -167,5 +171,48 @@ func LoadConfigFromFile(path string) (rules Rules, err error) {
 		return
 	}
 
-	return cfg.Rules()
+	return
+}
+
+func (cfg *Config) LoadExtraCerts(dir string) error {
+	if dir == "" {
+		return nil
+	}
+
+	// get system pool certificates
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	matches, err := filepath.Glob(path.Join(dir, "*.pem"))
+	if err != nil {
+		return err
+	}
+	if len(matches) == 0 {
+		log.WithFields(
+			log.Fields{
+				"dir": dir,
+			}).Debug("No certificates found")
+	}
+
+	for _, match := range matches {
+		cert, err := ioutil.ReadFile(match)
+		if err != nil {
+			return fmt.Errorf(
+				"Error while loading certificate %s: %v",
+				match,
+				err)
+		}
+
+		// Append cert to the system pool
+		if ok := rootCAs.AppendCertsFromPEM(cert); ok {
+			log.WithFields(log.Fields{
+				"cert": match,
+			}).Debug("Extra certificate imported")
+		}
+	}
+	cfg.CertPool = rootCAs
+
+	return nil
 }

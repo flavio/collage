@@ -1,12 +1,16 @@
 package handlers
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
+	docker_types "github.com/docker/docker/api/types"
 	"github.com/flavio/collage/config"
+	"github.com/genuinetools/reg/registry"
 )
 
 func translateName(mappingRules config.MappingRules, name string) (registry *url.URL, remoteName string, err error) {
@@ -53,4 +57,35 @@ func GetRulesByHost(host string, rules config.Rules) config.MappingRules {
 		return rules.Vhosts[host]
 	}
 	return rules.Instance
+}
+
+func NewRegistry(url *url.URL, cfg *config.Config) (*registry.Registry, error) {
+	auth := docker_types.AuthConfig{
+		ServerAddress: url.String(),
+	}
+
+	opt := registry.Opt{
+		Debug: cfg.Debug,
+	}
+
+	if url.Scheme == "https" && cfg.CertPool != nil {
+		// We have to inject our custom certificates
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            cfg.CertPool,
+			},
+		}
+		opt.Insecure = true
+
+		reg, err := registry.New(auth, opt)
+		if err != nil {
+			return nil, err
+		}
+		reg.Client.Transport = transport
+
+		return reg, nil
+	}
+
+	return registry.New(auth, opt)
 }

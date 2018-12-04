@@ -6,8 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	docker_types "github.com/docker/docker/api/types"
-	"github.com/genuinetools/reg/registry"
+	"github.com/flavio/collage/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,7 +26,7 @@ func (app *App) GetCatalog(w http.ResponseWriter, r *http.Request) {
 	rules := GetRulesByHost(r.Host, app.Rules)
 
 	for registry, mounts := range rules.MountPointsByRegistry {
-		upstreamCatalog, err := upstreamCatalog(registry)
+		upstreamCatalog, err := upstreamCatalog(registry, app.Cfg)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"event":    "fetch catalog",
@@ -50,14 +49,10 @@ func (app *App) GetCatalog(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func upstreamCatalog(registryUrl *url.URL) (repositories []string, err error) {
-	auth := docker_types.AuthConfig{
-		ServerAddress: registryUrl.String(),
-	}
-
-	reg, err := registry.New(auth, registry.Opt{})
+func upstreamCatalog(registryUrl *url.URL, cfg *config.Config) ([]string, error) {
+	reg, err := NewRegistry(registryUrl, cfg)
 	if err != nil {
-		return
+		return []string{}, err
 	}
 
 	return reg.Catalog("")

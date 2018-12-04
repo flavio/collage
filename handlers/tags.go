@@ -7,8 +7,7 @@ import (
 
 	"github.com/docker/distribution/registry/api/errcode"
 	"github.com/docker/distribution/registry/api/v2"
-	docker_types "github.com/docker/docker/api/types"
-	"github.com/genuinetools/reg/registry"
+	"github.com/flavio/collage/config"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -40,7 +39,7 @@ func (app *App) GetRepositoryTags(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags, err := upstreamTags(registry, remoteName)
+	tags, err := upstreamTags(registry, app.Cfg, remoteName)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"event":    "upstreamTags",
@@ -65,14 +64,10 @@ func (app *App) GetRepositoryTags(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func upstreamTags(registryUrl *url.URL, name string) (tags []string, err error) {
-	auth := docker_types.AuthConfig{
-		ServerAddress: registryUrl.String(),
-	}
-
-	reg, err := registry.New(auth, registry.Opt{})
+func upstreamTags(registryUrl *url.URL, cfg *config.Config, name string) ([]string, error) {
+	reg, err := NewRegistry(registryUrl, cfg)
 	if err != nil {
-		return
+		return []string{}, err
 	}
 
 	return reg.Tags(name)

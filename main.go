@@ -30,7 +30,7 @@ func cleanup(socket string) {
 
 func main() {
 	var port int
-	var configData, configFile, cert, key, socket string
+	var configData, configFile, extraCerts, cert, key, socket string
 	var debug bool
 
 	app := cli.NewApp()
@@ -78,6 +78,13 @@ func main() {
 			EnvVar:      "COLLAGE_CONFIG",
 			Destination: &configData,
 		},
+		cli.StringFlag{
+			Name:        "extra-certs",
+			Value:       "",
+			Usage:       "Directory containing certificate files (.pem files) to be trusted",
+			EnvVar:      "COLLAGE_EXTRA_CERTS",
+			Destination: &extraCerts,
+		},
 		cli.BoolFlag{
 			Name:        "debug, d",
 			Usage:       "Enable extra debugging",
@@ -119,19 +126,25 @@ func main() {
 				1)
 		}
 
-		var rules config.Rules
+		var cfg config.Config
 		var err error
 
 		if configFile != "" {
-			rules, err = config.LoadConfigFromFile(configFile)
+			cfg, err = config.NewFromFile(configFile)
 		} else {
-			rules, err = config.LoadConfig(configData)
+			cfg, err = config.NewFromData(configData)
 		}
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}
 
-		hApp, err := handlers.NewApp(rules)
+		// set config attributes influenced by cli flags
+		cfg.Debug = debug
+		if err = cfg.LoadExtraCerts(extraCerts); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+
+		hApp, err := handlers.NewApp(&cfg)
 		if err != nil {
 			return cli.NewExitError(err, 1)
 		}

@@ -86,13 +86,6 @@ docker pull flavio/collage
 
 The image runs collage as unprivileged `web` user.
 
-If you need to add additional certificates (useful when some of the "upstream"
-registries you deal with are using self-signed certificates), you have to put
-all of them under `/usr/local/share/ca-certificates/`. The `init` process of the
-image will automatically import them.
-
-Note well: you can ignore the `WARNING: ca-certificates.crt does not contain exactly one certificate or CRL: skipping` message. This is something know with Alpine Linux (which is currently used as operative system of the image).
-
 ## Virtual hosts config
 
 It's possible to configure collage to have virtual hosts specific mappings.
