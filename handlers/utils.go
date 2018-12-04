@@ -28,14 +28,14 @@ func translateName(mappingRules config.MappingRules, name string) (registry *url
 	for reg, mountPoints := range mappingRules.MountPointsByRegistry {
 		for _, mp := range mountPoints {
 			if strings.HasPrefix(name, mp.Target) {
-				target = mp.Target
-				source = mp.Source
-				break
+				// The match with the longest length has precedence because
+				// is more specific
+				if len(mp.Target) > len(target) {
+					target = mp.Target
+					source = mp.Source
+					registry = reg
+				}
 			}
-		}
-		if target != "" {
-			registry = reg
-			break
 		}
 	}
 	if registry == nil || target == "" || source == "" {
