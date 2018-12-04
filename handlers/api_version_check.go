@@ -60,8 +60,6 @@ func (app *App) GetApiVersionCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Docker-Distribution-Api-Version", "registry/2.0")
 	io.WriteString(w, "{}")
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func getRegistryBearerRealm(registry *url.URL, rules config.Rules) (string, error) {
